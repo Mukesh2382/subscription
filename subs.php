@@ -27,14 +27,11 @@
 
 function handle_my_form()
 {
-    global $wpdb;
-
     if (isset($_POST['email'])) {
         $email = sanitize_text_field($_POST['email']);
         $pattern = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
         if (preg_match($pattern, $email)) {
             if (isset($_POST['submit'])) {
-
                 $subs_emails = get_option('subs_emails');
                 if (!$subs_emails) {
                     $subs_emails = array();
@@ -42,8 +39,8 @@ function handle_my_form()
                 $subs_emails[] = $_POST['email'];
                 update_option('subs_emails', $subs_emails);
 
-                // Display a success message
-                echo '<div class="updated"><p>You are subscribed to Daily Updates!</p></div>';
+                echo '<script>alert("You have been subscribed successfully!");</script>';
+                send_mail_to_user($email);
             }
         } else {
             echo '<div class="error"><p>Invalid Email ID</p></div>';
@@ -52,6 +49,13 @@ function handle_my_form()
 }
 add_action('init', 'handle_my_form');
 
+function send_mail_to_user($email){
+    $headers = array(
+        'From: mukesh.choudhari@wisdmlabs.com',
+        'Content-Type: text/html; charset=UTF-8'
+    );
+    wp_mail($email,'You are subscribed to Daily Updates','Welcome to Daily Updates',$headers);
+}
 
 
 
