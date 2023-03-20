@@ -39,7 +39,6 @@ function handle_my_form()
                 if (in_array($email, $subs_emails)) {
                     echo '<script>alert("You are already subscribed!");</script>';
                 } else {
-
                     $subs_emails[] = $email;
                     update_option('subs_emails', $subs_emails);
 
@@ -54,21 +53,45 @@ function handle_my_form()
 }
 add_action('init', 'handle_my_form');
 
-function send_mail_to_user($email)
+function send_mail_to_user($to)
 {
+    $message = "You are subscribed to Daily Updates";
+    $message .= "\n\n";
+    $summary = get_post_details();
+    foreach ($summary as $data){
+		$message .= $data['title']. "\n";
+		$message .= $data['url']. "\n";
+        $message .= "\n";
+    }
     $headers = array(
         'From: mukesh.choudhari@wisdmlabs.com',
         'Content-Type: text/html; charset=UTF-8'
     );
-    wp_mail($email, 'You are subscribed to Daily Updates', 'Welcome to Daily Updates', $headers);
+    wp_mail($to, 'Welcome to Daily Updates',$message, $headers);
 }
-
-
-
-
 add_action('wp_head', 'subscribe_me_callback');
 
+function get_post_details()
+{
+	$mailarray = array();
+	$args = array(
+		'post_type' => 'post',
+		'date_query' => array(
+			array(
+				'after' => '24 hours ago'
+			)
+		)
+	);
+	$query = new WP_Query($args);
 
+	foreach ($query->posts as $post) {
+		$singlepost = array(
+			'title' => $post->post_title,
+			'url' => get_permalink($post->ID));
+		array_push($mailarray, $singlepost);
+	}
+	return $mailarray;
+}
 function subscribe_me_callback()
 {
 ?>
