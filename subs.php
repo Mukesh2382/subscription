@@ -25,6 +25,51 @@
  * Domain Path:       /languages
  */
 
+
+function subs_add_settings_page()
+{
+    //added menu page
+    add_menu_page(
+        'Subscription Settings', //page title
+        'Manage Subscriptions', //text to be displayed
+        'manage_options', //manage options
+        'subscription-settings', //slug
+        'subscription_render_settings_page', // callback function
+        'dashicons-admin-site-alt3',
+        100 //position
+    );
+}
+add_action('admin_menu', 'subs_add_settings_page');
+
+//callback for menu
+function subscription_render_settings_page()
+{
+?>
+    <div class="wrap">
+        <h1>Subscription Settings</h1>
+        <form method="post" action="options.php">
+            <?php
+            // Output the settings fields
+            settings_fields('my_plugin_settings_group');
+            do_settings_sections('my-plugin-settings');
+            ?>
+            <label>No of Posts : </label>
+            <input type="text" name="no_of_posts" value="<?php echo esc_attr(get_option('no_of_posts'))?>">
+            <?php submit_button('Save Changes'); ?>
+        </form>
+    </div>
+<?php
+}
+
+
+//function to be called on admin init
+function setup_my_page()
+{
+    register_setting('my_plugin_settings_group', 'no_of_posts');
+    add_settings_section('subs_settings', 'Subscription Settings', '', 'my-plugin-settings');
+}
+add_action('admin_init', 'setup_my_page');
+
 function handle_my_form()
 {
     if (isset($_POST['email'])) {
@@ -58,39 +103,48 @@ function send_mail_to_user($to)
     $message = "You are subscribed to Daily Updates";
     $message .= "\n\n";
     $summary = get_post_details();
-    foreach ($summary as $data){
-		$message .= $data['title']. "\n";
-		$message .= $data['url']. "\n";
+    foreach ($summary as $data) {
+        $message .= $data['title'] . "\n";
+        $message .= $data['url'] . "\n";
         $message .= "\n";
     }
     $headers = array(
         'From: mukesh.choudhari@wisdmlabs.com',
         'Content-Type: text/html; charset=UTF-8'
     );
-    wp_mail($to, 'Welcome to Daily Updates',$message, $headers);
+    wp_mail($to, 'Welcome to Daily Updates', $message, $headers);
 }
 add_action('wp_head', 'subscribe_me_callback');
 
 function get_post_details()
 {
-	$mailarray = array();
-	$args = array(
-		'post_type' => 'post',
-		'date_query' => array(
-			array(
-				'after' => '24 hours ago'
-			)
-		)
-	);
-	$query = new WP_Query($args);
+    // $mailarray = array();
+    // $args = array(
+    //     'post_type' => 'post',
+    //     'date_query' => array(
+    //         array(
+    //             'after' => '24 hours ago'
+    //         )
+    //     )
+    // );
+    // $query = new WP_Query($args);
+    $mailarray = array();
+    $args = array(
+        'post_type'      => 'post',
+        'posts_per_page' => 2,
+        'post_status'    => 'publish'
+    );
 
-	foreach ($query->posts as $post) {
-		$singlepost = array(
-			'title' => $post->post_title,
-			'url' => get_permalink($post->ID));
-		array_push($mailarray, $singlepost);
-	}
-	return $mailarray;
+    $query = new WP_Query($args);
+
+    foreach ($query->posts as $post) {
+        $singlepost = array(
+            'title' => $post->post_title,
+            'url' => get_permalink($post->ID)
+        );
+        array_push($mailarray, $singlepost);
+    }
+    return $mailarray;
 }
 function subscribe_me_callback()
 {
