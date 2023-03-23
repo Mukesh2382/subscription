@@ -24,6 +24,17 @@
  * Text Domain:       subs
  * Domain Path:       /languages
  */
+// ---------------------- Admin Code here ----------------------
+require plugin_dir_path(__FILE__). 'includes/scripts.php';
+
+function my_plugin_enqueue_styles() {
+    // Register the stylesheet
+    wp_register_style( 'my-plugin-styles', plugins_url( 'assets/css/styles.css', __FILE__ ) );
+
+    // Enqueue the stylesheet
+    wp_enqueue_style( 'my-plugin-styles' );
+}
+add_action( 'wp_enqueue_scripts', 'my_plugin_enqueue_styles' );
 
 
 function subs_add_settings_page()
@@ -38,9 +49,64 @@ function subs_add_settings_page()
         'dashicons-admin-site-alt3',
         100 //position
     );
+
+    add_submenu_page(
+        'subscription-settings', // Parent slug
+        'Users List', // Page title
+        'Send Mails', // Menu title
+        'manage_options', // Capability required to access page
+        'send-mail-settings', // Menu slug
+        'send_mail_cb' // Callback function that outputs the page HTML
+    );
 }
 add_action('admin_menu', 'subs_add_settings_page');
 
+//callback for submenu 
+function send_mail_cb(){
+    $email_array = get_option('subs_emails');
+    echo '<table><th>Subscribers List</th>';
+    foreach($email_array as $email){
+        echo '<tr><td>' . $email . '</td></tr>';
+    }
+    echo '</table>';
+    ?>
+
+    <form method="post">
+        <input type="submit" name="send" id="send" value="Send Mail" />
+    </form>
+
+    <?php
+
+    if (isset($_POST['send'])) {
+        send_mail_to_all();
+    }
+
+}
+
+
+function send_mail_to_all(){
+    $subscribers_list = get_option('subs_emails');
+
+    foreach ($subscribers_list as $mail) {
+        $subject = 'Hello! We have something special for you';
+        $summary = get_post_details();
+
+        $message = "Our Latest articles (May Be Helpful to You)";
+        $message .= "\n";
+        foreach ($summary as $post_data) {
+            $message .= 'Title: ' . $post_data['title'] . "\n";
+            $message .= 'URL: ' . $post_data['url'] . "\n";
+            $message .= "\n";
+        }
+
+        $headers = array(
+            'From: mukesh.choudhari@wisdmlabs.com',
+            'Content-Type: text/html; charset=UTF-8'
+        );
+
+        wp_mail($mail, $subject, $message, $headers);
+    }
+}
 //callback for menu
 function subscription_render_settings_page()
 {
@@ -53,8 +119,6 @@ function subscription_render_settings_page()
             settings_fields('my_plugin_settings_group');
             do_settings_sections('my-plugin-settings');
             ?>
-            <label>No of Posts : </label>
-            <input type="text" name="no_of_posts" value="<?php echo esc_attr(get_option('no_of_posts'))?>">
             <?php submit_button('Save Changes'); ?>
         </form>
     </div>
@@ -66,9 +130,23 @@ function subscription_render_settings_page()
 function setup_my_page()
 {
     register_setting('my_plugin_settings_group', 'no_of_posts');
-    add_settings_section('subs_settings', 'Subscription Settings', '', 'my-plugin-settings');
+    add_settings_section('subs_settings', 'Notification Settings', '', 'my-plugin-settings');
+    add_settings_field('no_of_posts','No of Posts','no_of_posts_cb', 'my-plugin-settings', 'subs_settings');
 }
 add_action('admin_init', 'setup_my_page');
+
+function no_of_posts_cb()
+{
+?>
+    <input type="text" name="no_of_posts" value="<?php echo esc_attr(get_option('no_of_posts')) ?>">
+<?php
+}
+
+
+
+// ------------------ User Code Starts Here -----------------------
+
+
 
 function handle_my_form()
 {
@@ -131,7 +209,7 @@ function get_post_details()
     $mailarray = array();
     $args = array(
         'post_type'      => 'post',
-        'posts_per_page' => 2,
+        'posts_per_page' => get_option('no_of_posts'),
         'post_status'    => 'publish'
     );
 
