@@ -64,7 +64,7 @@ add_action('admin_menu', 'subs_add_settings_page');
 //callback for submenu 
 function send_mail_cb(){
     $email_array = get_option('subs_emails');
-    echo '<table><th>Subscribers List</th>';
+    echo '<table id="sm-table"><th>Subscribers List</th>';
     foreach($email_array as $email){
         echo '<tr><td>' . $email . '</td></tr>';
     }
@@ -72,7 +72,7 @@ function send_mail_cb(){
     ?>
 
     <form method="post">
-        <input type="submit" name="send" id="send" value="Send Mail" />
+        <input class="button button-primary" type="submit" name="send" id="send" value="Send Mail" />
     </form>
 
     <?php
