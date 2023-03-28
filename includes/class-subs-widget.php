@@ -16,7 +16,8 @@ class Subscription_Widget extends WP_Widget
 			public function widget($args, $instance)
 			{
 				// Code to output the widget HTML goes here
-				subscribe_me_callback();
+                $subscribe_me_admin = new Subs_Admin(null, null);
+                $subscribe_me_admin->subscribe_me_callback();
 			}
 
 			// Output the widget form in the admin area
