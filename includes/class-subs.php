@@ -156,7 +156,10 @@ class Subs {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-
+		$this->loader->add_action('admin_menu',$plugin_admin, 'subs_add_settings_page');
+		$this->loader->add_action('admin_init',$plugin_admin, 'setup_my_page');
+		$this->loader->add_action('init',$plugin_admin, 'handle_my_form');
+		$this->loader->add_action('widgets_init',$plugin_admin, 'register_subscription_widget');
 	}
 
 	/**
