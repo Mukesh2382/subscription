@@ -8,36 +8,72 @@
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
  *
- * @link              https://mukesh.com
+ * @link              https://https://mukesh.com
  * @since             1.0.0
  * @package           Subs
  *
  * @wordpress-plugin
  * Plugin Name:       subs
- * Plugin URI:        https://subs.com
- * Description:       Demo of subscription model    
+ * Plugin URI:        https://https://subs.com
+ * Description:       Demo of subscription model
  * Version:           1.0.0
  * Author:            Mukesh
- * Author URI:        https://mukesh.com
+ * Author URI:        https://https://mukesh.com
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       subs
  * Domain Path:       /languages
  */
-// ---------------------- Admin Code here ----------------------
-require plugin_dir_path(__FILE__). 'includes/scripts.php';
 
-function my_plugin_enqueue_styles() {
-    // Register the stylesheet
-    wp_register_style( 'my-plugin-styles', plugins_url( 'assets/css/styles.css', __FILE__ ) );
-
-    // Enqueue the stylesheet
-    wp_enqueue_style( 'my-plugin-styles' );
+// If this file is called directly, abort.
+if ( ! defined( 'WPINC' ) ) {
+	die;
 }
-add_action( 'wp_enqueue_scripts', 'my_plugin_enqueue_styles' );
 
+/**
+ * Currently plugin version.
+ * Start at version 1.0.0 and use SemVer - https://semver.org
+ * Rename this for your plugin and update it as you release new versions.
+ */
+define( 'SUBS_VERSION', '1.0.0' );
 
-function subs_add_settings_page()
+/**
+ * The code that runs during plugin activation.
+ * This action is documented in includes/class-subs-activator.php
+ */
+function activate_subs() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-subs-activator.php';
+	Subs_Activator::activate();
+}
+
+/**
+ * The code that runs during plugin deactivation.
+ * This action is documented in includes/class-subs-deactivator.php
+ */
+function deactivate_subs() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-subs-deactivator.php';
+	Subs_Deactivator::deactivate();
+}
+
+register_activation_hook( __FILE__, 'activate_subs' );
+register_deactivation_hook( __FILE__, 'deactivate_subs' );
+
+/**
+ * The core plugin class that is used to define internationalization,
+ * admin-specific hooks, and public-facing site hooks.
+ */
+require plugin_dir_path( __FILE__ ) . 'includes/class-subs.php';
+
+/**
+ * Begins execution of the plugin.
+ *
+ * Since everything within the plugin is registered via hooks,
+ * then kicking off the plugin from this point in the file does
+ * not affect the page life cycle.
+ *
+ * @since    1.0.0
+ */
+ function subs_add_settings_page()
 {
     //added menu page
     add_menu_page(
@@ -192,20 +228,10 @@ function send_mail_to_user($to)
     );
     wp_mail($to, 'Welcome to Daily Updates', $message, $headers);
 }
-add_action('wp_head', 'subscribe_me_callback');
+
 
 function get_post_details()
 {
-    // $mailarray = array();
-    // $args = array(
-    //     'post_type' => 'post',
-    //     'date_query' => array(
-    //         array(
-    //             'after' => '24 hours ago'
-    //         )
-    //     )
-    // );
-    // $query = new WP_Query($args);
     $mailarray = array();
     $args = array(
         'post_type'      => 'post',
@@ -242,3 +268,49 @@ function subscribe_me_callback()
 
 <?php
 }
+class Subscription_Widget extends WP_Widget
+{
+
+    // Constructor function
+    public function __construct()
+    {
+        $widget_options = array(
+            'classname' => 'subscription_widget',
+            'description' => 'A widget for subscribing to our newsletter'
+        );
+        parent::__construct('subscription_widget', 'Subscription Widget', $widget_options);
+    }
+
+    // Output the widget content on the front-end
+    public function widget($args, $instance)
+    {
+        // Code to output the widget HTML goes here
+        subscribe_me_callback();
+    }
+
+    // Output the widget form in the admin area
+    public function form($instance)
+    {
+        // Code to output the widget form HTML goes here
+    }
+
+    // Handle saving the widget options
+    public function update($new_instance, $old_instance)
+    {
+        // Code to handle saving the widget options goes here
+    }
+}
+
+function register_subscription_widget()
+{
+    register_widget('Subscription_Widget');
+}
+add_action('widgets_init', 'register_subscription_widget');
+
+function run_subs() {
+
+	$plugin = new Subs();
+	$plugin->run();
+
+}
+run_subs();
